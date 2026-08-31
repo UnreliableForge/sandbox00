@@ -1,0 +1,74 @@
+# このファイルはbackendにある。このままだと、ボリューム名やコンテナ名に backendとついてしまう。
+# わかりにくいので、nameを指定するする。
+name: sandbox00
+
+services:
+  # tagdb:
+  #   image: public.ecr.aws/aws-dynamodb-local/aws-dynamodb-local:3.3.1
+
+  # imageは、AWS Private ECRにアップロードする予定。
+  # 開発環境なので、localでも問題ない気がするが、ECRにアップロードしておくことで、imageとcontainerを明確に分けたかったり、imageをチームで共有したりとかできる。
+  # このあたりの区別があいまいのまま使っていたので、無駄なimage buildを行っていたといったことからの反省。
+  # composeファイルに使用するDockerファイルを書いてしまうのはよくない。
+  # 本当にDockerファイルが必要ですか？composeでインストール->実行ができるなら、そのほうが非効率ですが、シンプルですよ。
+  # composeでDockerファイルを指定する必要がありますか？Dockerfileでイメージをビルドし、imageでそのイメージを使用するほうがシンプルでいいと思いますよ。
+  backend:
+    image: backend00-dev:latest
+    #コンテナ名は指定しない。
+    #container_name: backend
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    environment:
+      - AWS_REGION=ap-northeast-1
+      - SPRING_PROFILES_ACTIVE=local
+      - DB_HOST=db
+    volumes:
+      - ./:/app
+      - ~/.m2:/root/.m2
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    networks:
+      - sandbox00
+
+  db:
+    image: public.ecr.aws/docker/library/mysql:8.4
+    # コンテナ名は指定しない。指定しない場合、他のプロジェクトとかぶらないような名前をDockerが自動的につける。
+    # コンテナ名を指定してしまうと、他のプロジェクトと教護する可能性があるため、Dockerが自動的につける名前を使う。
+    # Dockerがどのようにしてコンテナ名をつけるかを知っておきましょう。
+    # コンテナ名なんてシステム上は使わないので、あまり気にしないほうがいいでしょう。
+    #container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sandbox00
+      MYSQL_USER: sandbox
+      MYSQL_PASSWORD: sandbox
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - sandbox00
+
+# vloume名は、先頭にプロジェクト名がつく。
+# ここで言うプロジェクト名は、docker composeを実行したディレクトリ名となるので、同じcomposeファイルでも
+# cd ~/sandbox00; docker compose -f backend/compose.yaml up -d
+# cd ~/sandbox00/backend; docker compose up -d
+# とした場合でボリューム名が異なることに注意。
+volumes:
+  db_data:
+#  tag_data:
+
+networks:
+  sandbox00:
+    external: true
+    name: sandbox00

@@ -1,0 +1,113 @@
+[data-theme="MSX1"] {
+  /* MSXっぽいカラー定義。色味が実際のものと少々異なる気がする。 */
+  --msx-transparent: transparent;
+  --msx-black: #000000;
+  --msx-medium-green: #21c842;
+  --msx-light-green: #5edc78;
+  --msx-dark-blue: #5455ed;
+  --msx-light-blue: #7d76fc;
+  --msx-dark-red: #d4524d;
+  --msx-cyan: #42ebcb;
+  --msx-medium-red: #fc5554;
+  --msx-light-red: #ff7978;
+  --msx-dark-yellow: #d4c154;
+  --msx-light-yellow: #e6ce80;
+  --msx-dark-green: #21b03b;
+  --msx-magenta: #c95bba;
+  --msx-gray: #ccc3cc;
+  --msx-white: #ffffff;
+
+  /* UIテーマ割り当て(テーマカラーの上書き)   */
+  --font-mono: "Press Start 2P", monospace;
+  --font-sans: "DotGothic16", sans-serif;
+
+  /* 意味で定義した色(オプション)　上書き。 */
+  --primary-background-color: var(--msx-dark-blue);
+  --secondary-background-color: var(--msx-light-blue);
+  --primary-foreground-color: var(--msx-white);
+  --secondary-foreground-color: var(--msx-gray);
+
+  --color-success: var(--msx-light-green);
+  --color-info: var(--msx-light-blue);
+  --color-warning: var(--msx-light-red);
+  --color-error: var(--msx-dark-red);
+  --color-danger: var(--msx-dark-red);
+  --color-fatal: var(--msx-dark-red);
+
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  image-rendering: pixelated;
+
+  /* variantクラスの再定義（定義の上書き）。UIテーマ割り当て(テーマカラーの上書き)で変更できる範囲であれば不要。 */
+  .textarea-severity-success::before {
+    content: "::before";
+    margin: 1em;
+  }
+  .textarea-severity-success::after {
+    content: "::after";
+    margin: 1em;
+  }
+
+  .textarea-severity-success::before {
+    margin: 1em;
+  }
+  /*
+ * 色の変更だけならクラスの再定義は不要。
+ */
+  /*
+  .textarea-severity-success {
+    background-color: var(--msx-light-green);
+    color: var(--msx-white);
+  }
+
+  .textarea-severity-info {
+    background-color: var(--msx-dark-blue);
+    color: var(--msx-white);
+  }
+
+  .textarea-severity-warning {
+    background-color: var(--msx-light-yellow);
+    color: var(--msx-white);
+  }
+
+  .textarea-severity-error {
+    background-color: var(--msx-medium-red);
+    color: var(--msx-white);
+  }
+
+  .textarea-severity-critical {
+    background-color: var(--msx-dark-red);
+    color: var(--msx-white);
+  }
+*/
+  /* 
+  ネイティブタグのデフォルトスタイルを直接変更する。
+  UIテーマ割り当て(テーマカラーの上書き)の変更やvariantクラス定義の上書きで変更できる範囲であれば不要。
+  */
+  button {
+    font-family: inherit;
+    background-color: var(--secondary-background-color);
+    color: var(--primary-foreground-color);
+    border: 2px solid var(--primary-foreground-color);
+  }
+  code {
+    font-family: var(--font-sans);
+    background-color: var(--msx-dark-blue);
+    color: var(--msx-white);
+    border: 2px solid var(--msx-cyan);
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    background-color: var(--msx-dark-blue);
+    color: var(--msx-white);
+    border: 2px solid var(--msx-cyan);
+  }
+
+  /*
+   * @utility button-large の設定を上書きする。
+   */
+  .button-large {
+    font-size: xx-large;
+  }
+}

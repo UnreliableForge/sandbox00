@@ -1,0 +1,23 @@
+/*
+ * variantのCSS
+ * 確認ボタンやキャンセルボタンなど、コンポーネントに意味を持たせるために使用する。
+ * 
+ */
+
+@utility button-confirm {
+  /* @utility button-baseは作成しない。ネイティブタグのデフォルトスタイルをベースとすることができるため。
+  @apply button-base;
+  */
+  background-color: var(--color-blue-200);
+  color: var(--color-gray-900);
+}
+
+@utility button-ok {
+  background-color: var(--color-green-200);
+  color: var(--color-gray-900);
+}
+
+@utility button-cancel {
+  background-color: var(--color-red-200);
+  color: var(--color-gray-900);
+}

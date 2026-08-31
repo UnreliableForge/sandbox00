@@ -1,0 +1,162 @@
+/*
+  tailwindcss のユーティリティークラス
+  tailwindcss4 からは、@conponent で定義し、それをコンポーネントで使うという方法は推奨されない方法となった。
+  かわりに、カスタムコンポーネントを作成し、そこで tailwindcss のスタイルを直接指定する方法が推奨されるようになった。
+  その方法だと、
+  スタイルを定義するだけのカスタムコンポーネントが増えてしまい、コードが煩雑になってしまう。
+  という点が問題となる。
+  そのため、@utility という新しい方法を使用する。新しい方法も何も、やることはtailwindcss3とあまり変わらない。
+  ほかにも、動的にcssを作成するような方法もある（tailwindcss-variants というライブラリなど）。
+  この方法を使用した場合、コードの知識が必要となり、CSS(tailwindcss)の知識のみではページのデザインができないという問題がある。
+  コードとデザイナの分業を行うため、@utility という方法を使用する。
+  tailwindcss-variants のような方法は、過度にエンジニア寄りになっている。@utilityのほうがコードとデザインの関連が薄くなるため、エンジニアにとっても@utilityのほうが扱いやすいと思う。
+
+  ファイルのサイズが大きくなる場合、てきとうに分割すること。ここでimportすることができます。
+  こんな感じで分割するといいかもしれません。
+  このファイルで @themeを定義するか、./theme/<default>.css を作成する。
+  テーマ別のCSS
+    ./<テーマ名>.css
+  コンポーネント別のCSS
+    ./component/<コンポーネント名>.css
+
+  テーマ作成は、以下のような方針で行うこと。    
+　* 基本はデフォルトスタイルを変更する。
+  * テーマはデフォルトスタイルを切り替える。
+  * variantがある場合や特別なスタイルがある場合、テーマ定義内で @utility の値を上書きする。
+  */
+
+/* テーマをimportする。 */
+@import "./themes/light.css";
+@import "./themes/dark.css";
+@import "./themes/msx1.css";
+
+@import "./variants/button.css";
+@import "./variants/textarea.css";
+
+/*
+ テーマ設定のサンプルコード。
+ サンプルなので、テーマ名、テーマ変数名、CSS能勢亭はすべていいかげんです。
+ 未定義の変数もあるかも。
+*/
+/*
+ * 1. テーマ変数の定義 
+ * テーマ変数は意味で定義する。テーマ内では、この色を使うこともできるし、独自の色を設定してもよい、
+ * bg-color-info : var(color-blue-500); # info背景色という意味
+ * color-mythic-blue: #1234FF;          # あたらしい色の定義。ここではこのような定義は推奨しない。 
+ *
+ * ネイティブタグのデフォルトスタイルを変更しなくても、ここだけでテーマをを設定することができたりするかもしれない。
+ */
+@theme {
+  /* 基本色 - 背景、コンテント */
+  --background-tone-01: #002b36; /* base03 */
+  --background-tone-02: #073642; /* base02 */
+  --content-tone-1: #586e75; /* base01 */
+  --content-tone-2: #657b83; /* base00 */
+  --content-tone-3: #839496; /* base0  */
+  --content-tone-4: #93a1a1; /* base1  */
+  --background-tone-1: #eee8d5; /* base2  */
+  --background-tone-2: #fdf6e3; /* base3  */
+
+  /* 基本色 - アクセントカラー */
+  --accent-color-0: #b58900; /* yellow  */
+  --accent-color-1: #cb4b16; /* orange  */
+  --accent-color-2: #dc322f; /* red     */
+  --accent-color-3: #d33682; /* magenta */
+  --accent-color-4: #6c71c4; /* violet  */
+  --accent-color-5: #268bd2; /* blue    */
+  --accent-color-6: #2aa198; /* cyan    */
+  --accent-color-7: #859900; /* green   */
+
+  /* 意味で定義した色(オプション) */
+  --primary-background-color: var(--background-tone-01);
+  --secondary-background-color: var(--background-tone-02);
+  --primary-foreground-color: var(--content-tone-3);
+  --secondary-foreground-color: var(--content-tone-4);
+
+  --color-success: var(--accent-color-7);
+  --color-info: var(--accent-color-5);
+  --color-warning: var(--accent-color-0);
+  --color-error: var(--accent-color-2);
+  --color-danger: var(--accent-color-2);
+  --color-fatal: var(--accent-color-2);
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+/*
+Base: ネイティブタグのデフォルトスタイル。
+@theme で定義された値を使用すること。
+*/
+@layer base {
+  body {
+    background-color: var(--primary-background-color);
+    color: var(--primary-foreground-color);
+  }
+
+  /* ボタンの基本形 */
+  button {
+    font-family: inherit;
+    background-color: var(--secondary-background-color);
+    color: var(--secondary-foreground-color);
+    border: 1px solid var(--primary-foreground-color);
+    margin: 0.2em;
+    padding: 0.2em;
+  }
+
+  code {
+    padding: 0.2em;
+  }
+
+  pre {
+    padding: 0.2em;
+  }
+}
+
+/*
+ * テーマの設定。
+ * ネイティブタグのデフォルトスタイルを直接変更する。
+ * variantは、@utilityで設定したスタイルをここで変更する。
+ */
+/* ./theme/*.css を参照 */
+
+/*
+3. Variant: 特別なスタイル（classNameで指定）
+
+テーマを変更する場合、テーマ内で、@utility の名前で指定し、上書きすること。
+@utility で指定した名前がそのままクラス名になります。
+
+./variants/*.css を参照。
+
+ここから下は、 ./variant に移動。
+
+*/
+
+/*
+3.1. サイズを変更する「サイズ」ユーティリティ
+*/
+@utility button-small {
+  @apply text-sm;
+}
+
+@utility button-large {
+  @apply text-base;
+}
+
+/*
+3.2. リンクをボタンに変更するなど、見た目を完全に変更する。
+*/
+@utility button-link {
+  /* デフォルトテーマ（または共通）でのリンク風見た目 */
+  background-color: transparent;
+  border: none;
+  color: #2563eb;
+  padding: 0;
+  text-decoration: underline;
+}

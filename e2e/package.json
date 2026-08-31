@@ -1,0 +1,14 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "SANDBOX00をローカルでE2Eテストを行う。 最終的にはAWS上で行うわけですが、ローカルでの環境を作成しておくことで、環境作成のための理解を深める。",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
+  }
+}

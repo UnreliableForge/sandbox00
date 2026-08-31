@@ -1,0 +1,24 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.unreliableforge.sandbox00</groupId>
+  <artifactId>backend</artifactId>
+  <version>0.0.1</version>
+
+  <properties>
+    <java.version>25</java.version>
+    <skipTests>true</skipTests>
+  </properties>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>db/migration</directory>
+        <targetPath>db/migration</targetPath>
+        <includes>
+          <include>*.sql</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+</project>

@@ -1,0 +1,40 @@
+# E2EテストをDockerで実行。
+# backendはコンパイルを行い、classファイルを生成します。起動時にE2Eテストデータを投入し、そのまま起動します。
+# frontendはdistをマウントしているだけで、テスト前にビルドを行いません。あらかじめビルドしておくこと。
+# frontend_buildのようなサービスを作成し、ビルドするのもありかもしれません。
+# backendは自動的に終了しないので、テスト終了時に  backend:8000/actuator/shutdown 呼ぶこと。これを呼ぶと、Spring Bootが終了します。
+# サービス frontend はテストが終了しても実行中になります。
+# 実行中となったままでも問題ありませんが、気になるなら手動で docker compose down で停止してください。
+
+
+name sandnox00e2e
+
+services:
+  backend:
+    image: backend00-dev:latest
+    working_dir: /app/e2e
+    volumes:
+      - ../:/app
+      - ~/.m2:/root/.m2
+    environment:
+      - AWS_REGION=ap-northeast-1
+      - SPRING_PROFILES_ACTIVE=e2e
+    command: ["./mvnw", "install test", "-Dtest=E2EDatabaseTest"]
+
+  frontend:
+    image: public.ecr.aws/nginx/nginx:latest
+    volumes:
+      - ../frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.47.0-jammy
+    depends_on:
+      - frontend
+      - backend
+    environment:
+      BASE_URL=http://frontend
+    working_dir: /tests
+    volumes:
+      - ../e2e:/tests
+    command: ["npx", "playwright", "test"]

@@ -1,0 +1,24 @@
+@utility textarea-severity-success {
+  background-color: var(--color-success);
+  color: var(--primary-background-color);
+}
+
+@utility textarea-severity-info {
+  background-color: var(--color-info);
+  color: var(--primary-background-color);
+}
+
+@utility textarea-severity-warning {
+  background-color: var(--color-warning);
+  color: var(--primary-background-color);
+}
+
+@utility textarea-severity-error {
+  background-color: var(--color-error);
+  color: var(--primary-background-color);
+}
+
+@utility textarea-severity-critical {
+  background-color: var(--color-fatal: );
+  color: var(--primary-background-color);
+}

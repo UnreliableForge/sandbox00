@@ -1,0 +1,31 @@
+# frontendからbackendのAPIを呼ぶための CloudFront エミュレーション nginxの起動。
+# npm run devでfrontendを起動していること。
+# backendを起動していること。
+# 起動していない場合、起動に失敗します。
+
+# 画面の動作を見るだけなら、Mockを使用することができます。Mockを使用するには、環境変数 VITE_USE_MOCK=true を使用します。
+# $ VITE_USE_MOCK=true npm run dev
+# external VITE_USE_MOCK=true で設定しないこと。
+
+name: sandbox00
+
+services:
+  # localhost:8000 -> frontend
+  # localhost:8000/api -> backend
+  #
+  # nginxは x-amzn-oidc-claims リクエストヘッダを付け、認証をエミュレートします。これを変更するには、/nginx/nginx.xonf を修正し、nginxを再起動すること。
+  nginx:
+    image: public.ecr.aws/nginx/nginx:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - sandbox00
+
+# networkはあらかじめ作成しておくこと。
+# なぜかexternalのnetworkはcomposeで自動で作成する方法がないらしい。
+networks:
+  sandbox00:
+    external: true
+    name: sandbox00

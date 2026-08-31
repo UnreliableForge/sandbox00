@@ -1,0 +1,91 @@
+{
+  "folders": [
+    {
+      "name": "AWS",
+      "path": "aws",
+    },
+    {
+      "path": "frontend",
+    },
+    {
+      "path": "backend",
+    },
+    {
+      "name": "Flyway",
+      "path": "flyway",
+    },
+    {
+      "name": "e2e",
+      "path": "e2e",
+    },
+    {
+      "name": "SANDBOX00 PROJECT ROOT",
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "java.compile.nullAnalysis.mode": "automatic",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "always",
+      "source.organizeImports": "always",
+    },
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.maven.disableTestClasspathFlag": false,
+    "notebook.defaultFormatter": "esbenp.prettier-vscode",
+    "java.format.enabled": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "java.format.settings.url": "file://${workspaceFolder}/eclipse-java-style.xml",
+    "java.format.settings.profile": "GoogleStyle",
+    "[java]": {
+      "editor.defaultFormatter": "redhat.java",
+    },
+    "[json]": {
+      "editor.defaultFormatter": "vscode.json-language-features",
+    },
+    "[xml]": {
+      "editor.defaultFormatter": "redhat.vscode-xml",
+      "editor.insertSpaces": true,
+      "editor.tabSize": 2,
+    },
+    "xml.format.preserveEmptyContent": false,
+    "files.associations": {
+      ".code-workspace": "jsonc",
+      //      "*.css": "tailwindcss",
+    },
+    "[jsonc]": {
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true,
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "java.completion.importOrder": ["java", "javax", "org", "com"],
+    // プラグインがないと警告が出るらしい。
+    // 警告が出たら、プラグインをインストールすること。
+    // npm install -g prettier prettier-plugin-tailwindcss
+    "prettier.requireConfig": true,
+    "editor.scrollbar.horizontalScrollbarSize": 12,
+    "editor.scrollbar.verticalScrollbarSize": 14,
+
+    // 標準のCSSリンターによる `@theme` や `@utility` などの警告を無視する
+    "css.lint.unknownAtRules": "ignore",
+
+    // SCSSやLessを使っている場合は以下も追加
+    "scss.lint.unknownAtRules": "ignore",
+    "css.lint.argumentsInColorFunction": "error",
+  },
+  "extensions": {
+    "recommendations": [
+      "bradlc.vscode-tailwindcss",
+      "hediet.vscode-drawio",
+      "GitHub.codespaces",
+      "ms-edgedevtools.vscode-edge-devtools",
+      "vscjava.vscode-java-debug",
+      "MS-CEINTL.vscode-language-pack-ja",
+      "shd101wyy.markdown-preview-enhanced",
+      "redhat.java",
+      "ms-playwright.playwright",
+      "redhat.vscode-xml",
+      "esbenp.prettier-vscode",
+    ],
+  },
+}
