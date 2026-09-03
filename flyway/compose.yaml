@@ -1,0 +1,22 @@
+# docker compose run --rm flyway
+name: sandbox00
+
+services:
+  flyway:
+    # 公式のものがWAS Punlic ECRにない。AWS privare ECR にアップロードし、それを使用するようにすること。
+    image: flyway/flyway
+    container_name: flyway_migration
+    networks:
+      - sandbox00
+    volumes:
+      - ./src/main/resources/db:/flyway/sql
+    environment:
+      - FLYWAY_URL=jdbc:mysql://db:3306/sandbox00?useSSL=false&allowPublicKeyRetrieval=true
+      - FLYWAY_USER=sandbox
+      - FLYWAY_PASSWORD=sandbox
+      - FLYWAY_LOCATIONS=filesystem:/flyway/sql/migrations,filesystem:/flyway/sql/repeatables
+
+networks:
+  sandbox00:
+    external: true
+    name: sandbox00

@@ -4,8 +4,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 public interface SessionService {
     String createSession(String sub);
@@ -23,9 +27,20 @@ public interface SessionService {
 @Profile("local")
 class LocalSessionService implements SessionService {
 
+    @Autowired
+    private HttpServletRequest request;
+
     private final Map<String, String> store = new ConcurrentHashMap<>();
 
     public String createSession(String sub) {
+
+        // 新しいIDTokenなので、ここでsessionを作り直す。
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        session = request.getSession(true);
+
         String sessionId = UUID.randomUUID().toString();
         store.put(sessionId, sub);
         return sessionId;
@@ -47,6 +62,9 @@ class LocalSessionService implements SessionService {
 @Service
 @Profile("aws")
 class AwsLocalSessionService implements SessionService {
+
+    @Autowired
+    private HttpServletRequest request;
 
     private final Map<String, String> store = new ConcurrentHashMap<>();
 

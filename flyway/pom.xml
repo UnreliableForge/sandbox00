@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.unreliableforge.sandbox00</groupId>
-  <artifactId>backend</artifactId>
+  <artifactId>migration</artifactId>
   <version>0.0.1</version>
 
   <properties>

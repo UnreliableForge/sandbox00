@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.nimbusds.jwt.SignedJWT;
 import com.unreliableforge.sandbox00.backend.service.SessionService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RequestMapping("/api")
 public class SessionController {
 
@@ -26,7 +28,7 @@ public class SessionController {
     private TokenVerifier tokenVerifier;
 
     @PostMapping("/v1/session")
-    public ResponseEntity<?> createSession(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> createSession(HttpServletRequest request, @RequestBody Map<String, String> body) {
         String idToken = body.get("idToken");
 
         // 環境に応じて切り替わる
@@ -59,6 +61,8 @@ class CognitoTokenVerifier implements TokenVerifier {
                 .withJwkSetUri("https://cognito-idp.ap-northeast-1.amazonaws.com/<USER_POOL_ID>/.well-known/jwks.json")
                 .build();
     }
+
+    // iss, subの検証をここで行う。
 
     @Override
     public Map<String, Object> verify(String idToken) {

@@ -9,9 +9,44 @@
 STG環境までということで、BLUE, GREENデプロイとかやらない。
 あとでやるかもしれないし、商用環境まではあまりやりたくないので、やらないかもしれない。
 
-AWSの構成
+## やることリスト。アーキテクト
 
-WAF経由でCognitoの認証を行い、トークンの管理を行う場合。
+- AWSインフラ構成・認証方式の選定と設計
+- API設計方針・共通レスポンスフォーマット策定
+- Spring Boot ⇄ TypeScript 型自動生成スクリプトの検証
+
+## やることリスト1
+
+- frontendをデプロイ(S3へコピー)。まずは手動で。
+- CloudFrontをセットアップ。frontendが見られるようにする。
+- backendはDBがないと起動しないので、RDSを作る、IAM認証で。
+- DB接続先を設定するための Parameter Storeを作る。
+- backendをデプロイ。これもまずは手動で。
+- ALBを作る。
+- CloudFront:HTTPS -> ALB:backend8080 へ。
+- ログインページを作る。まずは2ファクタ認証は行わない。
+- Cognitoを設定する。
+- 認証が必要なサンプルAPIを作成する。認可はあとで。
+- AWS SSM ポートフォワードを使う(MySQL用)。
+
+## やることリスト2
+
+- Flywayでマイグレーション。
+- Dockerでvitest(local)
+- DockerでJUnitテスト(local)
+- DockerでE2Eテスト(local)
+- CloudFromationでVPC環境を作成する。
+- CodeBuild, CodeDeploy, CodePipeline
+- vitest を AWS で
+- JUnit を AWS で
+- E2EテストをAWSで
+- テストレポートのの生成と公開(vitest)
+- テストレポートのの生成と公開(JUnit)
+- テストレポートのの生成と公開(E2E)
+
+## AWSの構成
+
+ALBがCognitoの認証を行い、トークンの管理を行う場合。
 
 ```
 CloudFront
@@ -31,7 +66,8 @@ Cognitoの認証を行い、トークンの管理は自分で行う場合。
 ```
 CloudFront
   + S3 (Reactで生成したページ。認可不要)
-    + Conginto認証
+    + Conginto認証ページ
+      + AWS Conginto
   + ALB
     + ECS　
       + 認証セッションの管理
@@ -41,12 +77,42 @@ CloudFront
           + Lambda(時間がかかる処理を非同期で行う)　
 
 MySQL
-DynamoDB
+DynamoDB(セッション管理用。とりあえずMySQLで行うので、まだ使わない)
 ```
 
-## WAFとCongintoで認証を行う。
+簡単な構成図。
+この図ではSQSとLambdaがあるか、今回は使用しない。
 
-**この方法は使用しない**
+<img src="./zu1.drawio.svg">
+
+## ALBとCongintoで認証を行う。
+
+**この方法は使用しない。ALB＋Cognito 認証は SPA（React）と構造的に合わないため。**
+
+1. ログイン状態を無効化できない（サーバー側で制御できない）
+   ALB 認証は JWT の有効期限までログイン状態が続くため、
+   バックエンド側から「ログアウト」や「セッション無効化」ができない。  
+   認可変更の即時反映もできず、実務的な制御が困難。
+2. 独自ログイン画面を使えない（Hosted UI 強制）
+   ALB 認証は Cognito Hosted UI にリダイレクトされるため、
+   自前のログイン画面を作れない。  
+   SPA の UX やブランドデザインと根本的に合わない。
+3. ログイン後に遷移しないケースに対応できない（SPA特有の要件）
+   React アプリでは、 ログイン後に URL を変えず、状態だけ変えるケースが多い。
+   しかし ALB 認証はリダイレクト前提であり、SPA の自然な UX と衝突する。
+4. 独自セッション方式と比較して実装量が大きく減るわけではない。
+   ALB 認証を使っても、
+   JWT の署名検証、
+   ユーザー情報の抽出、
+   認可ロジック、
+   ログアウト処理の代替
+   など結局バックエンド側の実装が必要で、
+   独自セッション方式と比べて大幅に楽になるわけではない。
+5. 実際に使う情報は sub だけで、構造的メリットが小さい
+   ALB が付与する x-amzn-oidc-data の JWT には多くの claim があるが、
+   実務で使うのは ユーザー識別子（sub）だけ。
+   DB上にユーザー情報として保持したほうが管理しやすく、claimを使うと二重管理になる。
+   そのため、ALB 認証を使う構造的メリットがほぼない。
 
 認証はCognitoを使う。バックエンドは認証済みのJWTのペイロード部分を受け取るだけとなる。
 ECSで認可を行い、必要な処理を行う。あるいは、Lambdaを起動するか、SQSにキューを投げる。
@@ -65,10 +131,14 @@ Authorization リクエストヘッダは存在しない。
 テスト時は、 Authorization ではなく、　x-amzn-oidc-data　をつける。これはJWTのペイロード部分をエンコードしたもの。
 バックエンドの実装時は、 x-amzn-oidc-data　からペイロードを取得する。
 
-### 認証をCognitoで行う。セッション情報を独自管理。
+## 認証をCognitoで行う。セッション情報を独自管理。
 
 認証はCognitoを使用する。セッション情報は独自管理。WAFでセッション情報の管理を行わない。
-x-amzn-oidc-data（JWT のデコード済み JSON）とか使わないので、前のセクションに書いてあることは大幅に修正します。
+ALB+Cognitoでの認証のデメリットをなくした方法。
+多少実装が増える。
+MFAに対応しようとすると、さらに実装が増える。
+将来的に他の認証方法が増えた場合、それへの対応が必要。
+といったデメリットが考えられるが、実装難易度、実装量から考えると、大きなデメリットとはならない。
 
 1. ログインダイアログを作成する。
 
@@ -78,6 +148,7 @@ CongitoとAWSのライブラリを使用し、Cogintoでの認証を行う。
 アクセストークンとリフレッシュトークンは使用しない。
 
 IDとパスワードを使用した簡単なログイン画面。
+MFAやパスキーには対応していない。
 受け取ったIDTokenはbackendを送信。
 
 ```
@@ -133,7 +204,8 @@ await fetch("/api/session", {
 ```
 
 サーバー側は、受け取ったIDを検証する。
-JWTによる検証を行い、検証の成功でセッションIDを生成し、DBにsubとともに保存する。
+JWTによる検証を行い、検証の成功でセッションIDを生成し、DBにsubとともに保存する（IDTokenではないことに注意）。
+このコードは iss, aud の検証を行っていないため、セキュリティ上の問題があります。
 
 ```
 @RestController
@@ -172,14 +244,44 @@ public class SessionController {
 }
 ```
 
+iss, sudも検証するようにしたもの。AIが生成したものなので、これあ本当に正しいものかを調べること。
+
+```
+public SessionController() {
+    String userPoolId = "<USER_POOL_ID>";
+    String clientId = "<APP_CLIENT_ID>"; // パラメータストア等から取得
+    String region = "ap-northeast-1";
+
+    String issuer = String.format("https://cognito-idp.%s.amazonaws.com/%s", region, userPoolId);
+    String jwkSetUri = issuer + "/.well-known/jwks.json";
+
+    // 1. 基本的なデコーダーを作成
+    NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+    // 2. iss と aud (CognitoのApp Client ID) をチェックするバリデータを作成
+    OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuer);
+    OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
+            JwtClaimNames.AUD,
+            aud -> aud != null && aud.contains(clientId)
+    );
+
+    // 3. バリデータ群を合成してデコーダーに設定
+    OAuth2TokenValidator<Jwt> combinedValidator =
+            new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator);
+
+    jwtDecoder.setJwtValidator(combinedValidator);
+
+    this.jwtDecoder = jwtDecoder;
+}
+```
+
 APIは、CookieからセッションIDを取得する。取得できなければ未認証エラー。
 DBにセッションIDが存在しない場合、未認証エラー。
 
 ### ローカル開発環境の構成。
 
 docker compose を使用する。
-認証（のトークン管理）方式を変更したため、これは行わない。
-~~nginxは backend へのリダイレクト時に ダミーの x-amzn-oidc-data を付与する~~
+認証（のトークン管理）方式を変更したため、~~nginxは backend へのリダイレクト時に ダミーの x-amzn-oidc-data を付与する~~は行わない。
 
 ```
 WSL
@@ -257,7 +359,7 @@ $ npm --version
 - Amazon Corretto 25
 - その他お好みで
 
-### APIのパス、メソッド、戻り値
+## APIのパス、メソッド、戻り値
 
 メソッドはPOSTのみ使用する。
 URLはリソースのロケーションを表すためにあるものだが、APIはリソースのロケーションではない。
@@ -276,7 +378,7 @@ HTTPの上にできるだけシンプルな形でRCP（のようなもの）を�
 そのうち、このような意図を持ったプロトコルが実装されることでしょう。
 SOAP?あんなものは忘れてしまいましょう。
 
-## APIのパスと型
+## APIのパスと型。
 
 SpringBootでAPIを定義した場合、当然だけど、SpringBoot内ではその型定義を使用することができる。
 その型情報をfrontend(TypeScript)で使うことができたらいいのでは？
@@ -285,81 +387,6 @@ SpringBootのAPIから、自動的にOpenAPIの定義書を作成することが
 この方法だと、frontend側ではSpringBootで定義したAPIの型情報を使うことができない。
 OpenAPIの定義書では、型チェックが機能しないので、わかりにくいし、エラーの原因となりうる。
 JavaScriptを使っているならともかく、せっかくTypeScriptを使っているのだから、SpringBootのメソッドの型情報をTypeScriptで使えるようにしたい。また、その型情報は自動的に生成するようにしたい。
-
-レスポンスコードについて。
-
-| HTTP ステータス | 意味                                 | UI の挙動                      |
-| --------------- | ------------------------------------ | ------------------------------ |
-| 200             | 成功                                 | 通常処理                       |
-| 400             | 業務エラーまたはバリデーションエラー | 画面内でエラー表示（遷移なし） |
-| 401             | 未認証                               | ログインダイアログ表示         |
-| 403             | 未認可                               | 400と同じ                      |
-| 500             | システムエラー                       | システムエラー画面へ遷移       |
-
-レスポンスの例。
-
-- 正常または業務上のエラー（未認可を含む）
-- その他のエラー
-
-基本的なレスポンスボディ。レスポンスコードは200, 400, 403
-バリデーションエラーの場合はレスポンスコード400を返す。
-
-```
-{
-  # APIの処理結果の詳細。
-  # success, info, warning, error のどれか。
-  # 画面の表示のみに使用する(MUIのAlertにあるseverityプロパティのような感じ)。
-  # MUIを使うわけではないので、severityの種類は増やしてもよい。tailwindcssのseverityも増やしましょう。
-  "severity" : "success",
-  # "画面に表示することを意図したメッセージ。必ず存在する。
-  "message" : "成功しました。",
-  # APIのデータ。severityがerrorでも空の data は存在する。
-  "data" : {
-
-  }
-  # コンポーネントのヘルパーテキストなどに表示することを意図したメッセージ。
-  # ヘルパーテキスト用のメッセージが存在しない場合、undefined.
-  # fieldnameはAPIパラメータの名前と同じ(先頭の$.を省略したJSON path形式)。
-  "invalid" : {
-    "user.address.zipcode" : "画面表示を意図したメッセージ"
-  }
-}
-```
-
-予期しないエラーの場合のレスポンスボディ。レスポンスコードは500
-SpringBootの共通エラーハンドラを使用し、この形式で返す。
-
-```
-{
-  # APIのエラー。
-  "severity" : "error",
-  # 適当なハッシュ値（セッションIDと日時とか適当なものから生成すればよい）。
-  # 画面表示のときに、ハッシュ値にいい感じのメッセージをつけてください。
-  # 同じ値をCloudWatchLogにエラーメッセージとともに出力する。
-  "message" : "E!<ハッシュ値>",
-  # APIのデータ。エラーなので空。
-  "data" : {
-
-  }
-  # invalidは存在しない。
-}
-```
-
-未認証の場合、レスポンスコードは401.
-レスポンスボディはこんな感じ。
-
-```
-{
-  "severity": "error",
-  "message": "認証が必要です",
-  "data": {},
-}
-```
-
-特別なリクエストヘッダ、レスポンスヘッダも使用しない。
-認証のためにリクエストヘッダは付与しない（もともと必要ない）。
-~~リクエストヘッダは認証用のものだけ。~~
-レスポンスヘッダはcontent-typeのみ使用する。これはSpringBootが自動的につける（たぶん）。なので、API側はヘッダについては意識しなくてよい。
 
 TSでのレスポンスの定義例。ジェネリクスで合成する。Javaでもだいたい同じ。
 
@@ -439,12 +466,12 @@ gitにもあげない。
 
 アップロード先の例。最新の <DATETIME> と latest は同じものをアップロードする。
 
-S3/<ENV>/frontend/<DATETIME>/report
+S3/\<ENV>/frontend/\<DATETIME>/report
 
-テストレポート -> S3/<ENV>/frontend/<DATETIME>/report
-ビルド生成物 -> S3/<ENV>/frontend/<DATETIME>/dist
-テストレポート(最新) -> S3/<ENV>/frontend/latest/report
-ビルド生成物(最新) -> S3/<ENV>/frontend/latest/dist
+テストレポート -> S3/\<ENV>/frontend/\<DATETIME>/report
+ビルド生成物 -> S3/\<ENV>/frontend/\<DATETIME>/dist
+テストレポート(最新) -> S3/\<ENV>/frontend/latest/report
+ビルド生成物(最新) -> S3/\<ENV>/frontend/latest/dist
 CloudFront公開 -> ビルド生成物(最新)と同じ
 
 ローカルで作成したテストレポート（HTMLで作成）は、nginxで見られるようにするのはいい考えかもしれない。
@@ -456,6 +483,9 @@ http://<ホスト名>:<ポート番号> で見られるようにしておくだ�
 ### backend単体テスト
 
 #### ローカルで行う
+
+IDtoken形式の認証情報が必要。local環境ではIDTokenの検証を行わないので、適当なIDTokenっぽいものを /aws/session に渡せばよい。
+DB上のユーザー情報に同じsubのレコードを作成しておくこと。
 
 #### AWS で行う
 
