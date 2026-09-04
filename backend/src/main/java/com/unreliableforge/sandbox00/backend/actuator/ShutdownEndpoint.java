@@ -7,6 +7,11 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+/**
+ * 外部から停止するactuator.
+ * 本番ではactuatorごと無効にすること。
+ * 
+ */
 @Component
 @Endpoint(id = "shutdown")
 public class ShutdownEndpoint {

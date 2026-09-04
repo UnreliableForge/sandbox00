@@ -81,7 +81,7 @@ DynamoDB(セッション管理用。とりあえずMySQLで行うので、まだ
 ```
 
 簡単な構成図。
-この図ではSQSとLambdaがあるか、今回は使用しない。
+この図ではRedis(セッション管理と認可情報), SQSとLambdaがあるか、今回は使用しない。
 
 <img src="./zu1.drawio.svg">
 

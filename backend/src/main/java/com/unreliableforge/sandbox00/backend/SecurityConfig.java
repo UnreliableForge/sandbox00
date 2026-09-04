@@ -23,7 +23,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
+
                 .authorizeHttpRequests(auth -> auth
+                        // ここではパスでの評価しかされない。
+                        // セッションとユーザーでの評価はSessionValidationFilterで行う必要がある。
                         // .requestMatchers("/api/v1/hello").permitAll()
                         .requestMatchers("/api/v1/health").permitAll()
                         .requestMatchers("/api/v1/user/session").permitAll()
