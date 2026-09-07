@@ -14,8 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
 import com.unreliableforge.sandbox00.backend.constant.Severity;
 import com.unreliableforge.sandbox00.backend.properties.CognitoProperties;
 import com.unreliableforge.sandbox00.backend.repository.records.ApiResponse;
@@ -25,6 +27,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
+record SessionRequestBody(
+        String idToken) {
+}
+
+@RestController
 @RequestMapping("/api")
 @Slf4j
 public class SessionController {
@@ -37,8 +44,8 @@ public class SessionController {
 
     @PostMapping("/v1/session")
     public ResponseEntity<?> session(HttpServletRequest request, HttpServletResponse response,
-            @RequestBody Map<String, String> body) throws IOException {
-        String idToken = body.get("idToken");
+            @RequestBody SessionRequestBody body) throws IOException {
+        String idToken = body.idToken();
 
         Map<?, ?> decoded = tokenVerifier.verify(idToken);
 
@@ -117,17 +124,24 @@ class LocalTokenVerifier implements TokenVerifier {
     public Map<String, Object> verify(String idToken) {
         try {
             // 署名検証なしで JWT をパース
-            SignedJWT jwt = SignedJWT.parse(idToken);
+            // SignedJWT jwt = SignedJWT.parse(idToken);
+            JWT jwt = JWTParser.parse(idToken);
 
             // ここで iss,audを検証する必要はないが、サンプルとして。
-            if (cognitoProperties.audience().equals(jwt.getJWTClaimsSet().getAudience().getFirst())) {
-                return null;
-                // throw new RuntimeException("Invalid local token");
-            }
+            // if
+            // (cognitoProperties.audience().equals(jwt.getJWTClaimsSet().getAudience().getFirst()))
+            // {
+            // return null;
+            // // throw new RuntimeException("Invalid local token");
+            // }
 
-            if (cognitoProperties.issuer().equals(jwt.getJWTClaimsSet().getIssuer())) {
+            // if (cognitoProperties.issuer().equals(jwt.getJWTClaimsSet().getIssuer())) {
+            // return null;
+            // // throw new RuntimeException("Invalid local token");
+            // }
+
+            if (jwt == null) {
                 return null;
-                // throw new RuntimeException("Invalid local token");
             }
 
             return jwt.getJWTClaimsSet().getClaims();

@@ -34,6 +34,7 @@ export function Layout() {
   ただし、MUIと違い、レイアウト用のコンポーネントとかないので、自分で作りましょう。
   */
 
+  // MOCKを有効にする。
   const useMock =
     import.meta.env.VITE_USE_MOCK === "true" ? "MOCK IN USE. " : "";
   const toggleAlwaysError =
@@ -50,6 +51,9 @@ export function Layout() {
         </Button>
       </>
     );
+
+  // LOCAL開発モード
+  const localenv = import.meta.env.VITE_LOCAL === "true" ? "LOCAL MODE. " : "";
 
   return (
     <div className="h-screen">
@@ -91,7 +95,7 @@ export function Layout() {
       </main>
       {/* --- Bottom Bar --- */}
       <footer className="footer-area mixed fixed right-0 bottom-0 left-0 h-16 items-center border-t border-gray-200 px-4">
-        MADE BY UnreliableForge. {useMock} {toggleAlwaysError}
+        MADE BY UnreliableForge. {useMock} {toggleAlwaysError} {localenv}
       </footer>
     </div>
   );

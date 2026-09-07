@@ -72,8 +72,10 @@
     // SCSSやLessを使っている場合は以下も追加
     "scss.lint.unknownAtRules": "ignore",
     "css.lint.argumentsInColorFunction": "error",
+    "java.debug.settings.hotCodeReplace": "auto",
+    "java.jdt.ls.javac.enabled": "on",
 
-    //    "hediet.vscode-drawio.resizeImages": false,
+    // "hediet.vscode-drawio.resizeImages": false,
   },
   "extensions": {
     "recommendations": [

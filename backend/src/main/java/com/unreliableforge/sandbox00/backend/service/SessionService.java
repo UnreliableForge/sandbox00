@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpSession;
  * 
  * SessionService
  */
+@Service
 public interface SessionService {
 
     /**
@@ -67,7 +68,13 @@ class LocalSessionService implements SessionService {
         if (session != null) {
             session.invalidate();
         }
+
         session = request.getSession(true);
+
+        if (sessionRepository.isUserExists(sub) == false) {
+            throw new RuntimeException("ユーザーが存在しません sub:" + sub);
+        }
+
         // この値は expireAt と同じ値にしておく。自前セッション管理で有効な間はHTTP sessionも有効。
         // sessions.expires_at の値と違い、前回のアクセスからの時間であることに注意。
         session.setMaxInactiveInterval(86400);
@@ -78,6 +85,11 @@ class LocalSessionService implements SessionService {
         // ここでDBに保存。セッションの有効期限は固定になっていますが、プロパティから取得しましょう。
         LocalDateTime expireAt = LocalDateTime.now().plusDays(1);
         sessionRepository.createSession(sessionId, sub, expireAt);
+
+        // UsernamePasswordAuthenticationToken authToken = new
+        // UsernamePasswordAuthenticationToken(sub,
+        // null, Collections.emptyList());
+        // SecurityContextHolder.getContext().setAuthentication(authToken);
 
         return sessionId;
     }

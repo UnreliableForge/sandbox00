@@ -35,3 +35,6 @@ build/
 # local files
 .local
 .local/
+
+# log
+*.log

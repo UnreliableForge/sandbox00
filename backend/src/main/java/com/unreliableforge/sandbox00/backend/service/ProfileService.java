@@ -1,8 +1,10 @@
 package com.unreliableforge.sandbox00.backend.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.unreliableforge.sandbox00.backend.domain.extension.entity.UserProfileEntity;
+import com.unreliableforge.sandbox00.backend.domain.extension.repository.UserProfileRepository;
+import com.unreliableforge.sandbox00.backend.domain.generated.entity.Users;
 
 /**
  * Profile情報を扱うクラス。
@@ -14,8 +16,13 @@ import com.unreliableforge.sandbox00.backend.domain.extension.entity.UserProfile
 @Service
 public class ProfileService {
 
-    public UserProfileEntity getProfile(String sub) {
-        return null;
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
+    public Users getProfile(String sub) {
+
+        return userProfileRepository.getUserProfile(sub);
+
     }
 
 }

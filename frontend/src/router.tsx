@@ -23,17 +23,21 @@ export const router = createBrowserRouter([
     element: <Layout />,
     errorElement: <ErrorPage />,
     children: Object.entries(modules).map(([path, loader]) => {
-      const relative = path.replace("./pages/", "").replace(".tsx", "");
-      const cleaned = relative.replace(/\/index$/i, "").toLowerCase();
+      // 1. 拡張子とプレフィックスを取り除く
+      const relative = path.replace("./pages/", "").replace(/\.tsx$/, "");
 
-      const url = cleaned === "index" ? "" : toKebabCase(cleaned);
-      // PascalCase → kebab-case
-      //      const url = toKebabCase(cleaned);
+      // 2. パスをスラッシュで分割して、セグメントごとにケバブケースに変換する
+      const segments = relative.split("/").map((segment) => {
+        if (segment.toLowerCase() === "index") return "";
+        return toKebabCase(segment);
+      });
+
+      // 3. 再びスラッシュで結合する（末尾や不要な空文字を調整）
+      const url = segments.filter(Boolean).join("/");
       const Component = lazy(loader);
 
       return {
-        path: "/" + url,
-        // loader: loader,
+        path: url ? "/" + url : "", // ルート（index）の場合はパスを空（または "/"）にする
         element: <Component />,
       };
     }),

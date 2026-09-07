@@ -30,7 +30,6 @@
 	<properties>
 		<java.version>25</java.version>
 		<skipTests>true</skipTests>
-
 		<jdbcDriverClass>com.mysql.cj.jdbc.Driver</jdbcDriverClass>
 		<jdbcUrl>jdbc:mysql:// localhost:3306/ sandbox00?useSSL=false</jdbcUrl>
 		<jdbcUsername>sandbox</jdbcUsername>
@@ -74,6 +73,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
+		<!--
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+			<version>7.1.1</version>
+			<scope>compile</scope>
+		</dependency>
+    -->
 		<dependency>
 			<groupId>org.mybatis.spring.boot</groupId>
 			<artifactId>mybatis-spring-boot-starter</artifactId>
@@ -100,6 +107,12 @@
 			<artifactId>spring-cloud-aws-starter-parameter-store</artifactId>
 			<version>4.1.0</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -256,14 +269,15 @@
 					<verbose>true</verbose>
 				</configuration>
 
-				<executions>
+				<!-- <executions>
 					<execution>
 						<id>Generate MyBatis Artifacts</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
 					</execution>
-				</executions>
+				</executions> -->
+
 			</plugin>
 		</plugins>
 	</build>

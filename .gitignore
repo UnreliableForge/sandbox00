@@ -1,3 +1,7 @@
 ./local
 *.local
 .github/
+
+*.jar
+
+node_modules/

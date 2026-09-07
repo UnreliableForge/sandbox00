@@ -5,13 +5,12 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,7 +24,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class SessionValidationFilter extends OncePerRequestFilter {
@@ -34,23 +32,15 @@ public class SessionValidationFilter extends OncePerRequestFilter {
     public UserSessionRepository userSessionRepository;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     @Qualifier("handlerExceptionResolver")
     private HandlerExceptionResolver resolver;
 
-    List<String> notFilterPath = List.of("/api/v1/login", "/api/v1/health", "api/vi/session");
+    List<String> notFilterPath = List.of("/api/v1/login", "/api/v1/health", "/api/v1/session");
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        return notFilterPath.stream().anyMatch(new Predicate<String>() {
-            @Override
-            public boolean test(String t) {
-                return path.startsWith(t);
-            }
-        });
+        return notFilterPath.contains(path);
     }
 
     @Override
@@ -60,16 +50,9 @@ public class SessionValidationFilter extends OncePerRequestFilter {
         HttpSession session = request.getSession(false);
 
         if (session == null) {
-            // response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            // response.setContentType("application/json;charset=UTF-8");
-            // String body = objectMapper
-            // .writeValueAsString(new ApiResponse<Void>(Severity.ERROR, "認証されていません。"));
-            // response.getWriter().write(body);
-
             // filterから例外をthrowする場合、このようにしないとGlobalHandlerでハンドルされないらしい
             resolver.resolveException(request, response, null,
                     new ResponseStatusException(HttpStatus.UNAUTHORIZED, "認証されていません。"));
-
             return;
         }
 
@@ -77,28 +60,32 @@ public class SessionValidationFilter extends OncePerRequestFilter {
 
         Optional<UserSessionEntity> userSession = userSessionRepository.validSession(sessionId, LocalDateTime.now());
 
-        // セッションIDとsubで検索。レコードが存在しない場合、無効なセッションとする。
-        if (userSession.isEmpty()) {
-            // response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            // response.setContentType("application/json;charset=UTF-8");
-            // response.getWriter().write("{\"status\": 401, \"message\": \"Session expired
-            // or invalid\"}");
-            // String body = objectMapper
-            // .writeValueAsString(new ApiResponse<Void>(Severity.ERROR, "認証されていません。"));
-            // response.getWriter().write(body);
-
+        if (userSession == null) {
             resolver.resolveException(request, response, null,
                     new ResponseStatusException(HttpStatus.UNAUTHORIZED, "認証されていません。"));
-
             return;
         }
+
+        // セッションIDとsubで検索。レコードが存在しない場合、無効なセッションとする。
+        if (userSession.isEmpty()) {
+            resolver.resolveException(request, response, null,
+                    new ResponseStatusException(HttpStatus.UNAUTHORIZED, "認証されていません。"));
+            return;
+        }
+
+        UserSessionEntity entity = userSession.get();
 
         // 検証OKなら SecurityContext に認証情報をセット。
         // これで後続の Controller や SecurityConfig の hasRole等が機能する。
         // 現在は仮の値を設定している。
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken("user",
+        PreAuthenticatedAuthenticationToken authentication = new PreAuthenticatedAuthenticationToken(
+                entity.getSub(),
                 null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        session.setAttribute(
+                org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                SecurityContextHolder.getContext());
 
         filterChain.doFilter(request, response);
     }

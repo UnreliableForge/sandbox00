@@ -2,6 +2,7 @@ package com.unreliableforge.sandbox00.backend.domain.extension.repository;
 
 import java.util.Optional;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.unreliableforge.sandbox00.backend.domain.generated.entity.Users;
@@ -50,6 +51,7 @@ DynamicSQLを使った実装よりは格段に楽でしょう。
 /**
  * generated/mapperを使うRepositoryのサンプル。
  */
+@Mapper
 public class SampleGeneratedBaseRepository {
 
     @Autowired
